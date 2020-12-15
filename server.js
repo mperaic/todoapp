@@ -14,6 +14,19 @@ mongodb.connect(connectionString, {useNewUrlParser: true}, function(err, client)
 app.use(express.json())
 app.use(express.urlencoded({extended: false}))
 
+
+function passwordProtected(req, res, next) {
+  res.set("WWW-Authenticate", "Basic realm='Simple Todo App'")
+  console.log(req.headers.authorization)
+  if (req.headers.authorization == "Basic bWltYTptaW1hMQ==") {
+      next()
+  } else {
+      res.status(401).send("Authentication required")
+  }
+}
+
+app.use(passwordProtected)
+
 app.get("/", function(req, res) {
     db.collection("items").find().toArray(function(err, items) {
         res.send(`
@@ -40,20 +53,17 @@ app.get("/", function(req, res) {
         
         <ul id="item-list" class="list-group pb-5">          
           
-        </ul>
-        
+        </ul>        
       </div>
       <script>
           let items = ${JSON.stringify(items)}
       </script>
-
       <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
       <script src="/browser.js"></script>
     </body>
     </html>
     `)
-    })
-    
+    })    
 })
 
 app.post("/create-item", function(req, res) {
